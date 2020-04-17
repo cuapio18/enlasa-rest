@@ -19,40 +19,67 @@ class AuthRestController extends AbstractRestfulController
     {
         $response;
         $request = $this->getRequest();
+
+            if($request->isPost()) {
+
+                try {
+
+                    $data = $request->getContent();
+                    $json = json_decode($data, true);
         
-        if($request->isPost()) {
-            $data = $request->getContent();
-            $json = json_decode($data, true);
+                    $bcrypt = new Bcrypt(array(
+                        'salt' => '$2y$05$KkFmCjGPJiC1jdt.SFcJ5uDXkF1yYCQFgiQIjjT6p.z7QIHyU1elW',
+                        'cost' => 5
+                    ));
+                    $securePass = $bcrypt->create($json['password_enlasa']);
+        
+                    $this->getAuthService()
+                            ->getAdapter()
+                            ->setIdentity($json['user_enlasa'])
+                            ->setCredential($securePass);
+                    
+                    $result = $this->getAuthService()->authenticate();
+        
+                    if($result->isValid()) {
+        
+                        // Data to user
+                        $userInfo = $this->getAuthService()->getAdapter()->getResultRowObject(array(
+                            'user_id',
+                            'name',
+                            'surname',
+                            'lastname',
+                            'email',
+                            'app_access',
+                            'canlogin'
+                        ));
+        
+                        // Response login success
+                        $response = new JsonModel(array(
+                            "response" => "Credenciales correctas",
+                            "status" => "success",
+                            "data" => json_decode(json_encode($userInfo), true),
+                            "acces_enlasa" => $userInfo->app_access,
+                            "id_user_enlasa" => $userInfo->user_id,
+                            "token_enlasa" => '$2y$05$KkFmCjGPJiC1jdt.SFcJ5uDXkF1yYCQFgiQIjjT6p.z7QIHyU1elW'
+                        ));
+                    } else {
+                        $response = new JsonModel(array(
+                            "response" => "Credenciales invalidas",
+                            "status" => "fail"
+                        ));
+                    }
+        
+                    return $response;
 
-            $bcrypt = new Bcrypt(array(
-                'salt' => '$2y$05$KkFmCjGPJiC1jdt.SFcJ5uDXkF1yYCQFgiQIjjT6p.z7QIHyU1elW',
-                'cost' => 5
-            ));
-            $securePass = $bcrypt->create($json['password_enlasa']);
+                } catch (Exception $e) {
+                    echo 'Excepción capturada: ',  $e->getMessage(), "\n";
+                }
 
-            $this->getAuthService()
-					->getAdapter()
-					->setIdentity($json['user_enlasa'])
-					->setCredential($securePass);
-            
-            $result = $this->getAuthService()->authenticate();
-
-            if($result->isValid()) {
-                $response = new JsonModel(array(
-                    "response" => "Credenciales correctas",
-                    "status" => "success",
-                    "acces_enlasa" => 1,
-                    "token_enlasa" => '$2y$05$KkFmCjGPJiC1jdt.SFcJ5uDXkF1yYCQFgiQIjjT6p.z7QIHyU1elW'
-                ));
-            } else {
-                $response = new JsonModel(array(
-                    "response" => "Credenciales invalidas",
-                    "status" => "fail"
-                ));
             }
 
-            return $response;
-        }
+        
+        
+
         
         return new JsonModel(array('data' => "Login API"));
     }

@@ -37,6 +37,9 @@ class Module
                 'AuthService' => function ($serviceManager) {
                     $adapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
                     $dbAuthAdapter = new DbAuthAdapter ( $adapter, 'iof_users', 'email', 'password' );
+
+                    $select = $dbAuthAdapter->getDbSelect();
+                    $select->where('canlogin = 1 AND app_access = 1');
                     	
                     $auth = new AuthenticationService();
                     $auth->setAdapter ( $dbAuthAdapter );
