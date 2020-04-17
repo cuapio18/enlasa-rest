@@ -52,7 +52,7 @@ class AuthRestController extends AbstractRestfulController
                             'app_access',
                             'canlogin'
                         ));
-        
+                        
                         // Response login success
                         $response = new JsonModel(array(
                             "response" => "Credenciales correctas",
@@ -60,7 +60,7 @@ class AuthRestController extends AbstractRestfulController
                             "data" => json_decode(json_encode($userInfo), true),
                             "acces_enlasa" => $userInfo->app_access,
                             "id_user_enlasa" => $userInfo->user_id,
-                            "token_enlasa" => '$2y$05$KkFmCjGPJiC1jdt.SFcJ5uDXkF1yYCQFgiQIjjT6p.z7QIHyU1elW'
+                            "token_enlasa" => bin2hex(openssl_random_pseudo_bytes(64))
                         ));
                     } else {
                         $response = new JsonModel(array(
